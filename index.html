@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag Media — Ade Dozie | Interactive Premiere Timeline Hero</title>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        prDark: '#161616',
+                        prPanel: '#1E1E1E',
+                        prHeader: '#262626',
+                        prBorder: '#323232',
+                        prVideoClip: '#16897E',
+                        prGraphicClip: '#8043A6',
+                        prAudioClip: '#1C4B82',
+                        prCtaClip: '#CC2936',
+                        prAccentBlue: '#0D6EFD',
+                        prPlayhead: '#FF3B30',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Premiere Pro Custom UI Aesthetics */
+        body {
+            background-color: #0E0E10;
+            color: #E1E1E1;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom Scrollbar for Timeline */
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #181818;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #383838;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #505050;
+        }
+
+        /* Timeline Track Horizontal Lines Background */
+        .timeline-grid-bg {
+            background-size: 80px 100%;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        /* Audio Waveform CSS Pattern simulation */
+        .waveform-pattern {
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.25) 0px,
+                rgba(255, 255, 255, 0.25) 2px,
+                transparent 2px,
+                transparent 5px
+            );
+        }
+
+        /* Subtle glowing edge for CTA clip */
+        .cta-glow {
+            animation: pulseGlow 2s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 8px rgba(204, 41, 54, 0.4); }
+            100% { box-shadow: 0 0 20px rgba(204, 41, 54, 0.9); }
+        }
+
+        /* Playhead Needle Head */
+        .playhead-head {
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 10px solid #FF3B30;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center p-2 sm:p-6 lg:p-10 font-sans overflow-x-hidden">
+
+    <!-- MAIN EDITING SUITE CONTAINER -->
+    <div class="w-full max-w-7xl bg-prDark rounded-xl border border-prBorder shadow-2xl overflow-hidden flex flex-col">
+
+        <!-- 1. TOP NAVBAR / PROGRAM MONITOR HEADER -->
+        <header class="bg-prHeader border-b border-prBorder px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Left Branding & Project Info -->
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-prAccentBlue rounded flex items-center justify-center text-white font-black text-xs tracking-tighter">
+                    Pr
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white tracking-wide">TAG MEDIA</span>
+                        <span class="text-xs bg-prBorder px-2 py-0.5 rounded text-gray-300 font-mono">v2026.4</span>
+                    </div>
+                    <p class="text-xs text-gray-400">ADE DOZIE &bull; Film Director &amp; Immersive Tech</p>
+                </div>
+            </div>
+
+            <!-- Center Sequence Tab & Controls -->
+            <div class="flex items-center gap-3 bg-prPanel border border-prBorder px-4 py-1.5 rounded-lg">
+                <button id="btnPlay" class="text-gray-300 hover:text-white transition-colors p-1" title="Play / Pause Spacebar">
+                    <i id="playIcon" class="fa-solid fa-play text-sm"></i>
+                </button>
+                <button id="btnLoop" class="text-gray-400 hover:text-prAccentBlue transition-colors p-1" title="Loop Playback">
+                    <i class="fa-solid fa-repeat text-xs"></i>
+                </button>
+                <div class="h-4 w-px bg-prBorder mx-1"></div>
+                <!-- Timecode Display -->
+                <div class="font-mono text-base font-bold text-green-400 tracking-wider bg-black/60 px-3 py-0.5 rounded border border-green-900/50">
+                    <span id="timecodeDisplay">00:00:02:14</span>
+                </div>
+            </div>
+
+            <!-- Right Export & Social Action -->
+            <div class="flex items-center gap-3">
+                <a href="https://x.com/tagmedia_" target="_blank" class="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 bg-prPanel border border-prBorder px-3 py-1.5 rounded transition">
+                    <i class="fa-brands fa-x-twitter"></i> @tagmedia_
+                </a>
+                <button onclick="renderProjectModal()" class="bg-prCtaClip hover:bg-red-600 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-file-export"></i>
+                    <span>RENDER &amp; BOOK</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 2. MONITOR PREVIEW & MONITOR STATS STRIP -->
+        <div class="bg-prPanel border-b border-prBorder p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            
+            <!-- Left Info Panel -->
+            <div class="bg-prDark border border-prBorder p-3.5 rounded-lg flex flex-col justify-center">
+                <span class="text-[10px] uppercase tracking-widest text-prAccentBlue font-bold">Sequence Specs</span>
+                <h3 class="text-sm font-bold text-white mt-0.5">Commercials, Events &amp; AR/VR Dev</h3>
+                <p class="text-xs text-gray-400 mt-1">Directing high-retention cinematic cuts &amp; next-gen immersive experiences.</p>
+            </div>
+
+            <!-- Center Live Monitor Status -->
+            <div class="relative bg-black border border-prBorder rounded-lg overflow-hidden h-28 flex items-center justify-center group">
+                <div class="absolute inset-0 bg-gradient-to-r from-prVideoClip/20 to-prGraphicClip/20 opacity-40"></div>
+                <!-- Mini Crosshair Grid Overlay -->
+                <div class="absolute inset-0 border border-white/5 pointer-events-none flex items-center justify-center">
+                    <div class="w-full h-px bg-white/10"></div>
+                    <div class="h-full w-px bg-white/10 absolute"></div>
+                </div>
+                
+                <div class="relative z-10 text-center px-4">
+                    <span id="activeClipBadge" class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-prGraphicClip/80 text-white font-bold mb-1">
+                        V3: GRAPHICS OVERLAY
+                    </span>
+                    <h4 id="activeClipTitle" class="text-sm font-extrabold text-white tracking-wide">
+                        ADE DOZIE // TAG MEDIA
+                    </h4>
+                </div>
+
+                <!-- Rec Indicator -->
+                <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/70 px-2 py-0.5 rounded border border-white/10">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                    <span class="text-[9px] font-mono font-bold text-red-400">REC 4K HDR</span>
+                </div>
+            </div>
+
+            <!-- Right Tool Box -->
+            <div class="bg-prDark border border-prBorder p-3.5 rounded-lg flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Editing Suite</span>
+                    <div class="flex items-center gap-2 mt-2">
+                        <button class="w-7 h-7 bg-prHeader border border-prAccentBlue text-prAccentBlue rounded flex items-center justify-center text-xs" title="Selection Tool (V)">
+                            <i class="fa-solid fa-arrow-pointer"></i>
+                        </button>
+                        <button class="w-7 h-7 bg-prHeader border border-prBorder text-gray-400 hover:text-white rounded flex items-center justify-center text-xs" title="Razor Tool (C)">
+                            <i class="fa-solid fa-scissors"></i>
+                        </button>
+                        <button class="w-7 h-7 bg-prHeader border border-prBorder text-gray-400 hover:text-white rounded flex items-center justify-center text-xs" title="Ripple Edit Tool (B)">
+                            <i class="fa-solid fa-film"></i>
+                        </button>
+                        <button class="w-7 h-7 bg-prHeader border border-prBorder text-gray-400 hover:text-white rounded flex items-center justify-center text-xs" title="Type Tool (T)">
+                            <i class="fa-solid fa-font"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-gray-400 block font-mono">FPS: 59.94</span>
+                    <span class="text-[10px] text-gray-400 block font-mono">AUDIO: 48kHz</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. MAIN INTERACTIVE TIMELINE WORKSPACE -->
+        <div class="relative bg-prDark flex flex-col overflow-hidden">
+            
+            <!-- TIME RULER STRIP -->
+            <div class="flex border-b border-prBorder bg-prHeader text-[10px] font-mono text-gray-400 select-none">
+                <!-- Track Control Spacer Box -->
+                <div class="w-32 sm:w-44 flex-shrink-0 border-r border-prBorder px-3 py-2 flex items-center justify-between bg-prDark">
+                    <span class="font-bold text-gray-300">TRACKS</span>
+                    <span class="text-[9px] text-gray-500">PROJ_MAIN</span>
+                </div>
+                
+                <!-- Ruler Ticks Area -->
+                <div id="rulerContainer" class="flex-1 relative h-8 overflow-hidden cursor-pointer">
+                    <div class="absolute inset-0 flex justify-between px-4 items-center">
+                        <span>00:00:00</span>
+                        <span>00:01:00</span>
+                        <span>00:02:00</span>
+                        <span>00:03:00</span>
+                        <span>00:04:00</span>
+                        <span>00:05:00</span>
+                        <span>00:06:00</span>
+                    </div>
+                    <!-- Micro tick marks -->
+                    <div class="absolute bottom-0 inset-x-0 h-2 flex justify-between px-2 opacity-30">
+                        <div class="w-px h-full bg-white"></div><div class="w-px h-full bg-white"></div>
+                        <div class="w-px h-full bg-white"></div><div class="w-px h-full bg-white"></div>
+                        <div class="w-px h-full bg-white"></div><div class="w-px h-full bg-white"></div>
+                        <div class="w-px h-full bg-white"></div><div class="w-px h-full bg-white"></div>
+                        <div class="w-px h-full bg-white"></div><div class="w-px h-full bg-white"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STACKED TRACKS CONTAINER -->
+            <div id="timelineStage" class="relative flex-1 min-h-[360px] overflow-x-auto timeline-grid-bg">
+                
+                <!-- PLAYHEAD NEEDLE & VERTICAL RED LINE -->
+                <div id="playhead" class="absolute top-0 bottom-0 z-30 pointer-events-none flex flex-col items-center" style="left: 25%;">
+                    <div class="playhead-head -mt-[1px]"></div>
+                    <div class="w-[2px] h-full bg-prPlayhead shadow-[0_0_8px_#FF3B30]"></div>
+                </div>
+
+                <!-- TRACK ROW 1: V3 (GRAPHICS / HEADER CLIP) -->
+                <div class="flex border-b border-prBorder/60 h-16 items-center">
+                    <!-- Left Track Controls -->
+                    <div class="w-32 sm:w-44 flex-shrink-0 bg-prPanel border-r border-prBorder h-full px-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-prGraphicClip font-mono">V3</span>
+                            <span class="text-[10px] text-gray-400 font-semibold hidden sm:inline">Titles</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                            <button class="hover:text-white px-1">V</button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-eye text-[9px]"></i></button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-lock text-[9px]"></i></button>
+                        </div>
+                    </div>
+                    <!-- Clip Track Slot -->
+                    <div class="flex-1 relative h-full flex items-center px-4">
+                        <div data-clip-id="v3" class="clip-block absolute left-[5%] w-[88%] sm:w-[65%] h-11 bg-prGraphicClip border border-purple-300/30 rounded px-3 py-1.5 flex items-center justify-between cursor-pointer shadow-md hover:brightness-110 transition-all">
+                            <div class="truncate">
+                                <span class="text-[9px] font-mono text-purple-200 block leading-none">[GRAPHICS_TEXT]</span>
+                                <span class="text-xs sm:text-sm font-black text-white truncate">ADE DOZIE // TAG MEDIA</span>
+                            </div>
+                            <span class="text-[9px] font-mono bg-purple-950/60 text-purple-200 px-1.5 py-0.5 rounded border border-purple-400/20 hidden sm:inline">Title.mogrt</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRACK ROW 2: V2 (MAIN DIRECTING / HERO COMMERCIAL CUT) -->
+                <div class="flex border-b border-prBorder/60 h-16 items-center">
+                    <div class="w-32 sm:w-44 flex-shrink-0 bg-prPanel border-r border-prBorder h-full px-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-prVideoClip font-mono">V2</span>
+                            <span class="text-[10px] text-gray-400 font-semibold hidden sm:inline">Hero Cut</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                            <button class="hover:text-white px-1">V</button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-eye text-[9px]"></i></button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-lock text-[9px]"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative h-full flex items-center px-4">
+                        <div data-clip-id="v2" class="clip-block absolute left-[15%] w-[80%] sm:w-[75%] h-11 bg-prVideoClip border border-teal-300/30 rounded px-3 py-1.5 flex items-center justify-between cursor-pointer shadow-md hover:brightness-110 transition-all">
+                            <div class="truncate">
+                                <span class="text-[9px] font-mono text-teal-200 block leading-none">[DIRECTOR_REEL]</span>
+                                <span class="text-xs sm:text-sm font-bold text-white truncate">Commercials, Events &amp; Digital Experiences</span>
+                            </div>
+                            <span class="text-[9px] font-mono bg-teal-950/60 text-teal-200 px-1.5 py-0.5 rounded border border-teal-400/20 hidden sm:inline">4K_ProRes.mov</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRACK ROW 3: V1 (TECH / AI AR VR B-ROLL) -->
+                <div class="flex border-b border-prBorder/60 h-16 items-center">
+                    <div class="w-32 sm:w-44 flex-shrink-0 bg-prPanel border-r border-prBorder h-full px-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-prVideoClip font-mono">V1</span>
+                            <span class="text-[10px] text-gray-400 font-semibold hidden sm:inline">B-Roll/Tech</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                            <button class="hover:text-white px-1">V</button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-eye text-[9px]"></i></button>
+                            <button class="hover:text-white px-1"><i class="fa-solid fa-lock text-[9px]"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative h-full flex items-center px-4">
+                        <div data-clip-id="v1" class="clip-block absolute left-[2%] w-[85%] sm:w-[55%] h-11 bg-prVideoClip/80 border border-teal-300/20 rounded px-3 py-1.5 flex items-center justify-between cursor-pointer shadow-md hover:brightness-110 transition-all">
+                            <div class="truncate">
+                                <span class="text-[9px] font-mono text-teal-200 block leading-none">[NEXT_GEN]</span>
+                                <span class="text-xs sm:text-sm font-semibold text-white truncate">AI, AR &amp; VR Content Development</span>
+                            </div>
+                            <span class="text-[9px] font-mono bg-teal-950/60 text-teal-200 px-1.5 py-0.5 rounded border border-teal-400/20 hidden sm:inline">Spatial_FX.mp4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRACK ROW 4: A1 (AUDIO SOUND DESIGN) -->
+                <div class="flex border-b border-prBorder/60 h-16 items-center">
+                    <div class="w-32 sm:w-44 flex-shrink-0 bg-prPanel border-r border-prBorder h-full px-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-prAudioClip font-mono">A1</span>
+                            <span class="text-[10px] text-gray-400 font-semibold hidden sm:inline">Sound Design</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px]">
+                            <button class="bg-prHeader border border-prBorder text-gray-300 px-1 rounded font-mono font-bold hover:bg-blue-600 hover:text-white">M</button>
+                            <button class="bg-prHeader border border-prBorder text-gray-300 px-1 rounded font-mono font-bold hover:bg-yellow-600 hover:text-white">S</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative h-full flex items-center px-4">
+                        <div data-clip-id="a1" class="clip-block absolute left-[5%] w-[90%] sm:w-[70%] h-11 bg-prAudioClip border border-blue-300/30 rounded px-3 py-1.5 flex items-center justify-between cursor-pointer shadow-md hover:brightness-110 transition-all overflow-hidden">
+                            <!-- Simulated Waveform lines -->
+                            <div class="absolute inset-0 waveform-pattern opacity-40 pointer-events-none"></div>
+                            <div class="relative z-10 truncate">
+                                <span class="text-[9px] font-mono text-blue-200 block leading-none">[MUSIC_A&amp;R]</span>
+                                <span class="text-xs sm:text-sm font-semibold text-white truncate">High-Octane Sound Sync &amp; Talent Curation</span>
+                            </div>
+                            <span class="relative z-10 text-[9px] font-mono bg-blue-950/70 text-blue-200 px-1.5 py-0.5 rounded border border-blue-400/20 hidden sm:inline">96kHz_Stem.wav</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRACK ROW 5: A2 (ACTION / CTA RENDER CLIP) -->
+                <div class="flex h-16 items-center">
+                    <div class="w-32 sm:w-44 flex-shrink-0 bg-prPanel border-r border-prBorder h-full px-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-prCtaClip font-mono">A2</span>
+                            <span class="text-[10px] text-gray-400 font-semibold hidden sm:inline">Action CTA</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px]">
+                            <button class="bg-prHeader border border-prBorder text-gray-300 px-1 rounded font-mono font-bold hover:bg-blue-600 hover:text-white">M</button>
+                            <button class="bg-prHeader border border-prBorder text-gray-300 px-1 rounded font-mono font-bold hover:bg-yellow-600 hover:text-white">S</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative h-full flex items-center px-4">
+                        <div onclick="renderProjectModal()" data-clip-id="a2" class="clip-block cta-glow absolute left-[40%] sm:left-[60%] w-[55%] sm:w-[35%] h-11 bg-prCtaClip border border-red-300/40 rounded px-3 py-1.5 flex items-center justify-between cursor-pointer shadow-xl hover:scale-[1.02] transition-all">
+                            <div class="truncate">
+                                <span class="text-[9px] font-mono text-red-200 block leading-none">[DIRECTOR_BOOKING]</span>
+                                <span class="text-xs sm:text-sm font-black text-white truncate flex items-center gap-1.5">
+                                    <span>RENDER PROJECT</span>
+                                    <i class="fa-solid fa-circle-arrow-right"></i>
+                                </span>
+                            </div>
+                            <span class="text-[9px] font-mono bg-red-950/80 text-red-100 px-1.5 py-0.5 rounded border border-red-400/30 hidden sm:inline">Book_Now.exe</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER STATUS STRIP -->
+            <footer class="bg-prHeader border-t border-prBorder px-4 py-2 text-[11px] font-mono text-gray-400 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5 text-green-400">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> GPU Accelerated (CUDA)
+                    </span>
+                    <span class="hidden sm:inline">Scrubs: <strong class="text-gray-200">Mouse Move / Drag</strong></span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span>Talent Management &bull; Film Directing</span>
+                    <span class="text-prAccentBlue">100% Render Ready</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- RENDER / BOOKING MODAL -->
+    <div id="bookingModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-prPanel border border-prBorder rounded-xl max-w-md w-full p-6 shadow-2xl relative transform transition-all scale-95 opacity-0" id="modalCard">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-prCtaClip rounded-lg flex items-center justify-center text-white text-lg">
+                    <i class="fa-solid fa-clapperboard"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Export &amp; Book Ade Dozie</h3>
+                    <p class="text-xs text-gray-400">TAG MEDIA Directing &amp; Creative Production</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-300 leading-relaxed mb-6">
+                Ready to cut your next commercial, high-scale event, or immersive AI/AR/VR video experience? Let's turn raw concepts into master timelines.
+            </p>
+
+            <div class="space-y-3 mb-6">
+                <a href="mailto:contact@tagmedia.com" class="w-full bg-prCtaClip hover:bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-envelope"></i> Send Direct Brief / Inquiry
+                </a>
+                <a href="https://twitter.com/tagmedia_" target="_blank" class="w-full bg-prHeader border border-prBorder hover:border-gray-500 text-gray-200 font-semibold text-sm py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition">
+                    <i class="fa-brands fa-x-twitter"></i> Connect on X (@tagmedia_)
+                </a>
+            </div>
+
+            <div class="text-center">
+                <button onclick="closeModal()" class="text-xs text-gray-400 hover:text-gray-200 underline">
+                    Return to Timeline Editing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT CONTROLS & TIMELINE INTERACTION -->
+    <script>
+        // DOM Elements
+        const timelineStage = document.getElementById('timelineStage');
+        const playhead = document.getElementById('playhead');
+        const timecodeDisplay = document.getElementById('timecodeDisplay');
+        const btnPlay = document.getElementById('btnPlay');
+        const playIcon = document.getElementById('playIcon');
+        const activeClipBadge = document.getElementById('activeClipBadge');
+        const activeClipTitle = document.getElementById('activeClipTitle');
+        const rulerContainer = document.getElementById('rulerContainer');
+        const bookingModal = document.getElementById('bookingModal');
+        const modalCard = document.getElementById('modalCard');
+
+        // Playhead & Animation State
+        let isPlaying = false;
+        let playheadPosition = 25; // Percentage (0 - 100)
+        let animationFrameId = null;
+
+        // Clip Descriptions Data
+        const clipInfo = {
+            v3: { badge: 'V3: GRAPHICS OVERLAY', title: 'ADE DOZIE // TAG MEDIA', color: 'bg-prGraphicClip/80' },
+            v2: { badge: 'V2: HERO COMMERCIALS', title: 'DIRECTING HIGH-IMPACT COMMERCIALS & DIGITAL', color: 'bg-prVideoClip/80' },
+            v1: { badge: 'V1: TECH & IMMERSIVE', title: 'AI, AR & VR CONTENT DEVELOPMENT', color: 'bg-prVideoClip/80' },
+            a1: { badge: 'A1: SOUND & MUSIC', title: 'MUSIC A&R & HIGH-OCTANE SOUND DESIGN', color: 'bg-prAudioClip/80' },
+            a2: { badge: 'A2: BOOKING ACTION', title: 'RENDER PROJECT // BOOK DIRECTOR NOW', color: 'bg-prCtaClip/80' }
+        };
+
+        // Convert percentage position to formatted Premiere Timecode string
+        function updateTimecode(percent) {
+            const totalFrames = Math.floor((percent / 100) * 360); // 6 seconds total @ 60fps
+            const seconds = Math.floor(totalFrames / 60);
+            const frames = totalFrames % 60;
+            const formattedSec = String(seconds).padStart(2, '0');
+            const formattedFrames = String(frames).padStart(2, '0');
+            timecodeDisplay.innerText = `00:00:${formattedSec}:${formattedFrames}`;
+        }
+
+        // Set playhead position visually
+        function setPlayhead(percent) {
+            playheadPosition = Math.max(0, Math.min(100, percent));
+            playhead.style.left = `${playheadPosition}%`;
+            updateTimecode(playheadPosition);
+        }
+
+        // Mouse Scrubbing Interaction
+        function handleScrub(e) {
+            const rect = timelineStage.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = (clickX / rect.width) * 100;
+            setPlayhead(percent);
+        }
+
+        timelineStage.addEventListener('mousemove', (e) => {
+            if (e.buttons === 1 || e.type === 'mousemove') { // Dragging or moving
+                handleScrub(e);
+            }
+        });
+
+        rulerContainer.addEventListener('click', handleScrub);
+
+        // Touch support for mobile scrubbing
+        timelineStage.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const rect = timelineStage.getBoundingClientRect();
+                const touchX = e.touches[0].clientX - rect.left;
+                const percent = (touchX / rect.width) * 100;
+                setPlayhead(percent);
+            }
+        });
+
+        // Play/Pause Playhead animation loop
+        function animatePlayhead() {
+            if (!isPlaying) return;
+            playheadPosition += 0.25;
+            if (playheadPosition > 100) {
+                playheadPosition = 0;
+            }
+            setPlayhead(playheadPosition);
+            animationFrameId = requestAnimationFrame(animatePlayhead);
+        }
+
+        btnPlay.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playIcon.className = 'fa-solid fa-pause text-sm text-yellow-400';
+                animatePlayhead();
+            } else {
+                playIcon.className = 'fa-solid fa-play text-sm text-gray-300';
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+
+        // Clip block hover/click activation
+        document.querySelectorAll('.clip-block').forEach(clip => {
+            clip.addEventListener('mouseenter', () => {
+                const clipId = clip.getAttribute('data-clip-id');
+                if (clipInfo[clipId]) {
+                    activeClipBadge.innerText = clipInfo[clipId].badge;
+                    activeClipBadge.className = `inline-block text-[10px] font-mono px-2 py-0.5 rounded text-white font-bold mb-1 ${clipInfo[clipId].color}`;
+                    activeClipTitle.innerText = clipInfo[clipId].title;
+                }
+            });
+        });
+
+        // Modal triggers
+        function renderProjectModal() {
+            bookingModal.classList.remove('hidden');
+            bookingModal.classList.add('flex');
+            setTimeout(() => {
+                modalCard.classList.remove('scale-95', 'opacity-0');
+                modalCard.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalCard.classList.remove('scale-100', 'opacity-100');
+            modalCard.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                bookingModal.classList.remove('flex');
+                bookingModal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
+
+</body>
+</html>
